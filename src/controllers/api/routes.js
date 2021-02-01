@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const authMiddleware = require('../../middlewares/api/auth');
 const getTenantMiddleware = require('../../middlewares/api/get-tenant-middleware');
 const getTenantUserMiddleware = require('../../middlewares/api/get-tenant-user-middleware');
 const getTenantOrderMiddleware = require('../../middlewares/api/get-tenant-order-middleware');
@@ -8,7 +9,9 @@ const getTenantCategoryMiddleware = require('../../middlewares/api/get-tenant-ca
 
 router.get('/', require('./home'));
 
-router.get('/tenants', require('./tenants/list'));
+router.post('/auth', require('./auth/auth'));
+
+router.get('/tenants', authMiddleware, require('./tenants/list'));
 router.get('/tenants/:tenant_id', getTenantMiddleware, require('./tenants/show'));
 
 router.get('/tenants/:tenant_id/users', getTenantMiddleware, require('./tenants/users/list'));

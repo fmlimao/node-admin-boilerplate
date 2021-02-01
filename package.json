@@ -18,11 +18,14 @@
   },
   "homepage": "https://github.com/fmlimao/node-admin-boilerplate#readme",
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "dotenv-safe": "^8.2.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
     "express-ejs-layouts": "^2.5.0",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.17",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "validatorjs": "^3.22.1"
   }
 }
