@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sistema | Login</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="/bower_components/Ionicons/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/bower_components/admin-lte/dist/css/AdminLTE.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="/bower_components/admin-lte/plugins/iCheck/square/blue.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+    <!-- Google Font -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+</head>
+
+<body class="hold-transition login-page">
+    <div class="login-box" id="AppVue">
+        <div class="login-logo">
+            <b>Admin</b>LTE
+        </div>
+
+        <!-- /.login-logo -->
+        <div class="login-box-body">
+            <p class="login-box-msg">Acesso Restrito</p>
+
+            <div class="alert" v-if="messages.length" :class="{
+                'alert-danger': error,
+                'alert-success': !error,
+            }" v-html="messages.join('<br>')"></div>
+
+            <form @submit.prevent="doLogin()">
+
+                <div class="form-group has-feedback" :class="{
+                    'has-error': fields.email.error
+                }">
+                    <input type="email" class="form-control" placeholder="E-mail" v-model="fields.email.value"
+                        :disabled="loading">
+                    <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                    <small class="help-block" v-if="fields.email.messages.length"
+                        v-html="fields.email.messages.join('<br>')"></small>
+                </div>
+
+                <div class="form-group has-feedback" :class="{
+                    'has-error': fields.password.error
+                }">
+                    <input type="password" class="form-control" placeholder="Senha" v-model="fields.password.value"
+                        :disabled="loading">
+                    <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                    <small class="help-block" v-if="fields.password.messages.length"
+                        v-html="fields.password.messages.join('<br>')"></small>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <button type="submit" class="btn btn-primary btn-block btn-flat" :disabled="loading">
+                            <span v-if="loading">Entrando</span>
+                            <span v-else>Entrar</span>
+                        </button>
+                    </div>
+                    <!-- /.col -->
+                </div>
+
+            </form>
+
+            <!-- <a href="#">I forgot my password</a><br> -->
+            <!-- <a href="register.html" class="text-center">Register a new membership</a> -->
+        </div>
+        <!-- /.login-box-body -->
+    </div>
+    <!-- /.login-box -->
+
+    <!-- jQuery 3 -->
+    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap 3.3.7 -->
+    <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- VueJS -->
+    <script src="/bower_components/vue/dist/vue.min.js"></script>
+    <!-- axios -->
+    <script src="/bower_components/axios/dist/axios.min.js"></script>
+
+    <script>
+        var App = new Vue({
+            el: '#AppVue',
+            data: {
+                loading: false,
+                error: false,
+                messages: [],
+                fields: {
+                    email: {
+                        value: 'user1@email.com',
+                        error: false,
+                        messages: [],
+                    },
+                    password: {
+                        value: '123456',
+                        error: false,
+                        messages: [],
+                    },
+                },
+            },
+            methods: {
+
+                checkAjaxResponse: function (response) {
+                    return (
+                        typeof response.code !== 'undefined'
+                        && typeof response.error !== 'undefined'
+                    );
+                },
+
+                clearForm: function () {
+                    App.error = false;
+                    App.messages = [];
+
+                    for (let fieldId in App.fields) {
+                        App.fields[fieldId].value = App.fields[fieldId].value.trim();
+                        App.fields[fieldId].error = false;
+                        App.fields[fieldId].messages = [];
+                    }
+                },
+
+                doLogin: function () {
+                    function callback(response) {
+                        console.log('callback', response);
+
+                        if (!App.checkAjaxResponse(response)) {
+                            App.error = true;
+                            App.messages.push('Erro interno.');
+                            console.log('response', response);
+                        }
+
+                        App.error = response.error;
+                        App.messages = response.messages;
+
+                        for (let fieldId in response.form) {
+                            App.fields[fieldId].error = response.form[fieldId].error;
+                            App.fields[fieldId].messages = response.form[fieldId].messages;
+                        }
+
+                        if (!response.error) {
+                            window.location.replace('/admin');
+                            return;
+                        }
+
+                        App.loading = false;
+                    }
+
+                    App.clearForm();
+
+                    if (!App.fields.email.value) {
+                        App.error = true;
+                        App.fields.email.error = true;
+                        App.fields.email.messages.push('Campo obrigatório.');
+                    }
+
+                    if (!App.fields.password.value) {
+                        App.error = true;
+                        App.fields.password.error = true;
+                        App.fields.password.messages.push('Campo obrigatório.');
+                    }
+
+                    if (App.error) {
+                        App.messages.push('Verifique todos os campos.');
+                        return;
+                    }
+
+                    App.loading = true;
+
+                    axios.post('/admin/login', {
+                        email: App.fields.email.value,
+                        password: App.fields.password.value,
+                    })
+                        .then(function (response) {
+                            callback(response.data);
+                        })
+                        .catch(function (err) {
+                            callback(err.response.data);
+                        })
+                        ;
+
+                },
+
+            },
+        });
+
+        // App.doLogin();
+    </script>
+</body>
+
+</html>

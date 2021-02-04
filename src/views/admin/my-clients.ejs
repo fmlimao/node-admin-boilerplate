@@ -1,0 +1,27 @@
+<%- contentFor('body') %>
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        <i class="fa fa-list"></i> Meus Clientes
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active"><i class="fa fa-list"></i> Meus Clientes</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+    <ul>
+        <% auth.clients.forEach(function (client) { %>
+            <li>
+                <a href="/admin/my-clients/<%- client.client_id %>"><%- client.name %></a>
+            </li>
+        <% }); %>
+    </ul>
+
+</section>
+
+<%- contentFor('scripts') %>

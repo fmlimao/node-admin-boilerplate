@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
         }
 
         const queryUserExists = `
-            SELECT U.user_id, U.name, U.email, U.password, U.salt
+            SELECT U.user_id, U.email, U.password, U.salt
             FROM users U
             WHERE U.deleted_at IS NULL
             AND U.email = ?;
@@ -50,14 +50,14 @@ module.exports = async (req, res) => {
             email,
         ];
 
-        let user = (await knex.raw(queryUserExists, argsUserExists))[0];
+        const userExists = (await knex.raw(queryUserExists, argsUserExists))[0];
 
-        if (!user.length) {
+        if (!userExists.length) {
             ret.setCode(400);
             throw new Error('Usuário não encontrado.');
         }
 
-        user = user[0];
+        const user = userExists[0];
 
         const passwordVerify = bcrypt.compareSync(password, user.password);
 
@@ -68,9 +68,6 @@ module.exports = async (req, res) => {
 
         const login = {
             id: user.user_id,
-            name: user.name,
-            email: user.email,
-            isPublic: false,
         };
 
         const exp = Number(process.env.TOKEN_EXPIRATION_SEC);

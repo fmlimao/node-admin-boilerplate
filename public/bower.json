@@ -1,0 +1,23 @@
+{
+  "name": "node-admin-boilerplate",
+  "homepage": "https://github.com/fmlimao/node-admin-boilerplate",
+  "authors": [
+    "Leandro Macedo <fmlimao@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "admin-lte": "^2.4.0",
+    "bootstrap": "^3.3.7",
+    "vue": "^2.6.12",
+    "axios": "^0.21.0"
+  }
+}

@@ -4,14 +4,21 @@ require('dotenv-safe').config();
 const express = require('express');
 const logger = require('morgan');
 const expressLayouts = require('express-ejs-layouts');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
 app.use(require('./src/middlewares/json-return'));
 
-app.use(logger('dev'));
+app.use(logger('dev', {
+    skip: function (req, res) {
+        return req.url.indexOf('bower_components') !== -1;
+    },
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static('./public'));
+app.use(cookieParser());
 
 app.set('views', './src/views');
 app.set('view engine', 'ejs');

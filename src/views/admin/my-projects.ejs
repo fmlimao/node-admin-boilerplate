@@ -1,0 +1,27 @@
+<%- contentFor('body') %>
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        <i class="fa fa-list"></i> Meus Projetos
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active"><i class="fa fa-list"></i> Meus Projetos</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+    <ul>
+        <% auth.projects.filter(function (project) { return project.client_id == currentClient.client_id }).forEach(function (project) { %>
+            <li>
+                <a href="/admin/my-clients/<%- currentClient.client_id %>/my-projects/<%- project.project_id %>"><%- project.name %></a>
+            </li>
+        <% }); %>
+    </ul>
+
+</section>
+
+<%- contentFor('scripts') %>
