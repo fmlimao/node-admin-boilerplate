@@ -16,6 +16,7 @@ module.exports = async (req, res) => {
                 R.acl_role_id
                 , R.name
                 , R.is_owner
+                , R.is_everyone
                 , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
                 , IFNULL(R2.name, '') AS parent_name
             FROM acl_roles R
@@ -34,7 +35,10 @@ module.exports = async (req, res) => {
             throw new Error('Perfil não encontrado.');
         }
 
-        if (roleExists.is_owner == 1) {
+        if (
+            roleExists.is_owner == 1
+            || roleExists.is_everyone == 1
+        ) {
             ret.setCode(400);
             throw new Error('Este perfil não pode ser editado.');
         }
@@ -56,9 +60,9 @@ module.exports = async (req, res) => {
             throw new Error('Verifique todos os campos.');
         }
 
-        // if (parent_acl_role_id) {
+        if (parent_acl_role_id) {
             const parentRoleExists = await sql.getOne(`
-                SELECT R.acl_role_id, R.is_owner
+                SELECT R.acl_role_id, R.is_owner, R.is_everyone
                 FROM acl_roles R
                 WHERE R.deleted_at IS NULL
                 AND R.client_id = ?
@@ -75,13 +79,16 @@ module.exports = async (req, res) => {
                 throw new Error('Verifique todos os campos.');
             }
 
-            if (parentRoleExists.is_owner == 1) {
+            if (
+                parentRoleExists.is_owner == 1
+                || parentRoleExists.is_everyone == 1
+            ) {
                 ret.setCode(400);
                 ret.setFieldError('parent_acl_role_id', true);
                 ret.addFieldMessage('parent_acl_role_id', 'Perfil Pai não pode ser usado.');
                 throw new Error('Verifique todos os campos.');
             }
-        // }
+        }
 
         const fieldsUpdate = [];
         const argsUpdate = [];
@@ -92,9 +99,9 @@ module.exports = async (req, res) => {
         }
 
         if (roleExists.is_owner == 0) {
-            if (parent_acl_role_id) {
+            if (typeof parent_acl_role_id !== 'undefined') {
                 fieldsUpdate.push('parent_acl_role_id = ?');
-                argsUpdate.push(parent_acl_role_id);
+                argsUpdate.push(parent_acl_role_id ? parent_acl_role_id : null);
             }
         }
 
@@ -116,6 +123,7 @@ module.exports = async (req, res) => {
                 R.acl_role_id
                 , R.name
                 , R.is_owner
+                , R.is_everyone
                 , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
                 , IFNULL(R2.name, '') AS parent_name
             FROM acl_roles R

@@ -102,7 +102,7 @@
                     }">
                         <label for="">Nome do Perfil</label>
                         <input type="text" class="form-control"
-                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1"
+                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1 || selectedRole.data.is_everyone == 1"
                             :placeholder="selectedRole.data.acl_role_id ? selectedRole.data.name : 'Nome do Perfil'"
                             v-model="selectedRole.form.fields.name.value">
                         <small class="help-block" v-html="selectedRole.form.fields.name.messages.join('<br>')"></small>
@@ -115,11 +115,11 @@
                                 data-placement="right"
                                 title="Este novo perfil irá herdar todas as permissões do Perfil Pai."></span></label>
                         <select class="form-control"
-                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1"
+                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1 || selectedRole.data.is_everyone == 1"
                             v-model="selectedRole.form.fields.parent_acl_role_id.value">
                             <option value="">-- Nenhum --</option>
                             <option :value="role.acl_role_id" v-for="role in roles.list.filter(function (role) {
-                                return role.is_owner == 0;
+                                return role.is_owner == 0 && role.is_everyone == 0;
                             })" :disabled="role.acl_role_id == selectedRole.data.acl_role_id">{{ role.name }}</option>
                         </select>
                         <small class="help-block" v-html="selectedRole.form.fields.parent_acl_role_id.messages.join('<br>')"></small>
@@ -133,6 +133,8 @@
                 <div class="box-body">
                     <button class="btn btn-success" @click.prevent="updateRole()"
                         :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading">Salvar</button>
+                    <button class="btn btn-danger" @click.prevent="deleteRole()"
+                        :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading">Deletar</button>
                     <button class="btn btn-default"
                         :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading">Cancelar</button>
                 </div>
@@ -399,6 +401,7 @@
                     acl_role_id: '',
                     name: '',
                     is_owner: '',
+                    is_everyone: '',
                     parent_acl_role_id: '',
                     parent_name: '',
                 },
@@ -493,6 +496,7 @@
                         acl_role_id: '',
                         name: '',
                         is_owner: '',
+                        is_everyone: '',
                         parent_acl_role_id: '',
                         parent_name: '',
                     },
@@ -580,6 +584,31 @@
                     name: App.selectedRole.form.fields.name.value,
                     parent_acl_role_id: App.selectedRole.form.fields.parent_acl_role_id.value,
                 }, {
+                    headers: {
+                        'x-access-token': '<%- auth.token %>',
+                    },
+                })
+                    .then(function (response) {
+                        callback(response.data);
+                    })
+                    .catch(function (err) {
+                        callback(err.response.data);
+                    })
+                    ;
+            },
+
+            deleteRole: function () {
+                function callback(response) {
+                    console.log('callback()', response);
+
+                    App.clearSelectRole();
+                    App.getRoles();
+                }
+
+                App.selectedRole.form.loading = true;
+
+                var url = `/api/clients/${currentClient.client_id}/roles/${App.selectedRole.data.acl_role_id}`;
+                axios.delete(url, {
                     headers: {
                         'x-access-token': '<%- auth.token %>',
                     },

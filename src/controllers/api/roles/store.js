@@ -32,6 +32,7 @@ module.exports = async (req, res) => {
                 R.acl_role_id
                 , R.name
                 , R.is_owner
+                , R.is_everyone
                 , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
                 , IFNULL(R2.name, '') AS parent_name
             FROM acl_roles R
@@ -44,6 +45,7 @@ module.exports = async (req, res) => {
 
         ret.addContent('role', role);
 
+        ret.setCode(201);
         ret.addMessage('Peril inserido com sucesso.');
 
         return res.status(ret.getCode()).json(ret.generate());
