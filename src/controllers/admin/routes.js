@@ -31,6 +31,10 @@ router.get('/my-clients/:my_client_id/dashboard', checkMyClientMiddleware, check
     res.render('admin/dashboard');
 });
 
+router.get('/my-clients/:my_client_id/roles', checkMyClientMiddleware, checkIfShouldBeProjectMiddleware, menuMiddleware, (req, res) => {
+    res.render('admin/roles');
+});
+
 router.get('/my-clients/:my_client_id/users', checkMyClientMiddleware, checkIfShouldBeProjectMiddleware, menuMiddleware, (req, res) => {
     res.render('admin/users');
 });

@@ -13,6 +13,10 @@ router.post('/auth', require('./auth/auth'));
 
 router.get('/me', authMiddleware, require('./me'));
 
+router.get('/clients/:client_id/roles', authMiddleware, require('./roles/list'));
+router.post('/clients/:client_id/roles', authMiddleware, require('./roles/store'));
+router.put('/clients/:client_id/roles/:acl_role_id', authMiddleware, require('./roles/update'));
+
 // router.get('/tenants', authMiddleware, require('./tenants/list'));
 // router.get('/tenants/:tenant_id', getTenantMiddleware, require('./tenants/show'));
 

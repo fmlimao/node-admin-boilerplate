@@ -1,0 +1,111 @@
+.pretty-switch {
+  position: relative;
+  height: 30px;
+}
+.pretty-switch > .states {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background-color: #ddd;
+  height: 30px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pretty-switch > .states > .state {
+  float: left;
+  height: 30px;
+  line-height: 30px;
+  width: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+.pretty-switch > input {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 30px;
+  width: 40px;
+  opacity: 0;
+  cursor: pointer;
+}
+.pretty-switch > input:nth-child(1) {
+  left: 0;
+}
+.pretty-switch > input:nth-child(2) {
+  left: 40px;
+}
+.pretty-switch > input:nth-child(3) {
+  left: 80px;
+}
+.pretty-switch.ps-2 {
+  width: 80px;
+}
+.pretty-switch.ps-2 > .states > .state:nth-child(1) {
+  background-color: transparent;
+  color: #dd4b39;
+}
+.pretty-switch.ps-2 > .states > .state:nth-child(2) {
+  background-color: transparent;
+  color: #00a65a;
+}
+.pretty-switch.ps-2 > input:nth-child(1):disabled ~ .states > .state:nth-child(1),
+.pretty-switch.ps-2 > input:nth-child(2):disabled ~ .states > .state:nth-child(2) {
+  background-color: transparent;
+  color: #aaa;
+}
+.pretty-switch.ps-2 > input:nth-child(1):checked ~ .states > .state:nth-child(1) {
+  background-color: #dd4b39;
+  color: #fff;
+}
+.pretty-switch.ps-2 > input:nth-child(2):checked ~ .states > .state:nth-child(2) {
+  background-color: #00a65a;
+  color: #fff;
+}
+.pretty-switch.ps-2 > input:nth-child(1):checked:disabled ~ .states > .state:nth-child(1),
+.pretty-switch.ps-2 > input:nth-child(2):checked:disabled ~ .states > .state:nth-child(2) {
+  background-color: #aaa;
+  color: #fff;
+}
+.pretty-switch.ps-3 {
+  width: 120px;
+}
+.pretty-switch.ps-3 > .states > .state:nth-child(1) {
+  background-color: transparent;
+  color: #dd4b39;
+}
+.pretty-switch.ps-3 > .states > .state:nth-child(2) {
+  background-color: transparent;
+  color: #fff;
+}
+.pretty-switch.ps-3 > .states > .state:nth-child(3) {
+  background-color: transparent;
+  color: #00a65a;
+}
+.pretty-switch.ps-3 > input:nth-child(1):disabled ~ .states > .state:nth-child(1),
+.pretty-switch.ps-3 > input:nth-child(2):disabled ~ .states > .state:nth-child(2),
+.pretty-switch.ps-3 > input:nth-child(3):disabled ~ .states > .state:nth-child(3) {
+  background-color: transparent;
+  color: #aaa;
+}
+.pretty-switch.ps-3 > input:nth-child(1):checked ~ .states > .state:nth-child(1) {
+  background-color: #dd4b39;
+  color: #fff;
+}
+.pretty-switch.ps-3 > input:nth-child(2):checked ~ .states > .state:nth-child(2) {
+  background-color: #f39c12;
+  color: #fff;
+}
+.pretty-switch.ps-3 > input:nth-child(3):checked ~ .states > .state:nth-child(3) {
+  background-color: #00a65a;
+  color: #fff;
+}
+.pretty-switch.ps-3 > input:nth-child(1):checked:disabled ~ .states > .state:nth-child(1),
+.pretty-switch.ps-3 > input:nth-child(2):checked:disabled ~ .states > .state:nth-child(2),
+.pretty-switch.ps-3 > input:nth-child(3):checked:disabled ~ .states > .state:nth-child(3) {
+  background-color: #aaa;
+  color: #fff;
+}

@@ -1,0 +1,598 @@
+<%- contentFor('body') %>
+
+<link rel="stylesheet" href="/css/pretty-switch.css">
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        <i class="fa fa-lock"></i> Perfis <small>(Permissões)</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active"><i class="fa fa-lock"></i> Perfis <small>(Permissões)</small></li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content" id="AppVue">
+
+    <div class="row">
+        <div class="col-md-3">
+
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Perfis</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-default btn-sm" title="Buscar Perfis"
+                            @click.prevent="clearSelectRole()" :disabled="selectedRole.form.loading">
+                            <i class="fa fa-remove"></i>
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" title="Buscar Perfis"
+                            @click.prevent="getRoles()" :disabled="selectedRole.form.loading">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" title="Adicionar Perfil"
+                            @click.prevent="addRole()" :disabled="selectedRole.form.loading">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body" v-if="
+                    (roles.messages.length)
+                    || (!roles.loaded && roles.loading)
+                    || (roles.loaded && !roles.list.length)
+                ">
+                    <div class="alert" v-if="roles.messages.length" :class="{
+                        'alert-danger': roles.error,
+                        'alert-success': !roles.error,
+                    }" v-html="roles.messages.join('<br>')"></div>
+
+                    <div class="alert alert-info" v-if="!roles.loaded && roles.loading">
+                        Carregando...
+                    </div>
+
+                    <div class="alert alert-warning" v-if="roles.loaded && !roles.list.length">
+                        Nenhum perfil encontrado.
+                    </div>
+                </div>
+                <!-- /.box-body -->
+
+                <div class="box-body no-padding" v-if="roles.loaded && roles.list.length">
+                    <ul class="nav nav-pills nav-stacked">
+                        <li v-for="role in roles.list" :class="{
+                            'active': role.acl_role_id == selectedRole.data.acl_role_id
+                        }">
+                            <a href="#" @click.prevent="selectRole(role)">
+                                {{ role.name }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.box-body -->
+
+                <div class="overlay" v-if="roles.loaded && roles.loading"><i class="fa fa-refresh fa-spin"></i></div>
+
+            </div>
+            <!-- /. box -->
+
+        </div>
+        <!-- /.col -->
+
+        <div class="col-md-9">
+
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Dados Gerais</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body" v-if="selectedRole.form.messages.length">
+                    <div class="alert" v-if="selectedRole.form.messages.length" :class="{
+                        'alert-danger': selectedRole.form.error,
+                        'alert-success': !selectedRole.form.error,
+                    }" v-html="selectedRole.form.messages.join('<br>')"></div>
+                </div>
+                <!-- /.box-body -->
+
+                <div class="box-body">
+                    <div class="form-group" :class="{
+                        'has-error': selectedRole.form.fields.name.error
+                    }">
+                        <label for="">Nome do Perfil</label>
+                        <input type="text" class="form-control"
+                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1"
+                            :placeholder="selectedRole.data.acl_role_id ? selectedRole.data.name : 'Nome do Perfil'"
+                            v-model="selectedRole.form.fields.name.value">
+                        <small class="help-block" v-html="selectedRole.form.fields.name.messages.join('<br>')"></small>
+                    </div>
+
+                    <div class="form-group" :class="{
+                        'has-error': selectedRole.form.fields.parent_acl_role_id.error
+                    }">
+                        <label for="">Perfil Pai <span class="fa fa-info-circle text-muted" data-toggle="tooltip"
+                                data-placement="right"
+                                title="Este novo perfil irá herdar todas as permissões do Perfil Pai."></span></label>
+                        <select class="form-control"
+                            :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading || selectedRole.data.is_owner == 1"
+                            v-model="selectedRole.form.fields.parent_acl_role_id.value">
+                            <option value="">-- Nenhum --</option>
+                            <option :value="role.acl_role_id" v-for="role in roles.list.filter(function (role) {
+                                return role.is_owner == 0;
+                            })" :disabled="role.acl_role_id == selectedRole.data.acl_role_id">{{ role.name }}</option>
+                        </select>
+                        <small class="help-block" v-html="selectedRole.form.fields.parent_acl_role_id.messages.join('<br>')"></small>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+
+            <div class="box box-default">
+                <div class="box-body">
+                    <button class="btn btn-success" @click.prevent="updateRole()"
+                        :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading">Salvar</button>
+                    <button class="btn btn-default"
+                        :disabled="!selectedRole.data.acl_role_id || selectedRole.form.loading">Cancelar</button>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+
+            <pre>{{ selectedRole }}</pre>
+
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Permissões Gerais</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body no-padding">
+
+                    <div class="table-responsive">
+
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <h4>Administrador</h4>
+
+                                    <p class="text-muted">
+                                        Membros com essa permissão têm todas as outras permissões e também podem ignorar
+                                        permissões específicas de canais. Pense bem antes de conceder essa permissão.
+                                    </p>
+                                </td>
+                                <td width="150" align="right">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-2">
+                                            <input type="radio" name="p1" id="p1_1" value="0">
+                                            <input type="radio" name="p1" id="p1_2" value="1" checked>
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>Administrador</h4>
+
+                                    <p class="text-muted">
+                                        Membros com essa permissão têm todas as outras permissões e também podem ignorar
+                                        permissões específicas de canais. Pense bem antes de conceder essa permissão.
+                                    </p>
+                                </td>
+                                <td width="150" align="right">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-2">
+                                            <input type="radio" name="p2" id="p2_1" value="0" checked>
+                                            <input type="radio" name="p2" id="p2_2" value="1">
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Permissões de Texto</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body no-padding">
+
+                    <div class="table-responsive">
+
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <h4>Administrador</h4>
+
+                                    <p class="text-muted">
+                                        Membros com essa permissão têm todas as outras permissões e também podem ignorar
+                                        permissões específicas de canais. Pense bem antes de conceder essa permissão.
+                                    </p>
+                                </td>
+                                <td width="150" align="center">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-2">
+                                            <input type="radio" name="p3_1" id="p3_1_1" value="0" checked disabled>
+                                            <input type="radio" name="p3_1" id="p3_1_2" value="1" disabled>
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                        <small class="text-muted">(Perfil Pai)</small>
+
+                                    </div>
+                                </td>
+                                <td width="150" align="right">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-3">
+                                            <input type="radio" name="p3_2" id="p3_2_1" value="-1">
+                                            <input type="radio" name="p3_2" id="p3_2_2" value="0" checked>
+                                            <input type="radio" name="p3_2" id="p3_2_3" value="1">
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-minus"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>Administrador</h4>
+
+                                    <p class="text-muted">
+                                        Membros com essa permissão têm todas as outras permissões e também podem ignorar
+                                        permissões específicas de canais. Pense bem antes de conceder essa permissão.
+                                    </p>
+                                </td>
+                                <td width="150" align="center">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-2">
+                                            <input type="radio" name="p4_1" id="p4_1_1" value="0" checked disabled>
+                                            <input type="radio" name="p4_1" id="p4_1_2" value="1" disabled>
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                        <small class="text-muted">(Perfil Pai)</small>
+
+                                    </div>
+                                </td>
+                                <td width="150" align="right">
+                                    <div style="margin-top: 20px;">
+
+                                        <div class="pretty-switch ps-3">
+                                            <input type="radio" name="p4_2" id="p4_2_1" value="-1">
+                                            <input type="radio" name="p4_2" id="p4_2_2" value="0" checked>
+                                            <input type="radio" name="p4_2" id="p4_2_3" value="1">
+
+                                            <div class="states">
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-minus"></span>
+                                                </div>
+
+                                                <div class="state">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                                </div>
+                                            </div>
+                                            <!-- /.states -->
+
+                                        </div>
+                                        <!-- /.pretty-switch -->
+
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+
+        </div>
+        <!-- /.col -->
+    </div>
+
+</section>
+
+<%- contentFor('scripts') %>
+<script>
+    var currentClient = JSON.parse('<%- JSON.stringify(currentClient) %>');
+
+    mixins.push({
+        el: '#AppVue',
+        data: {
+            roles: {
+                loaded: false,
+                loading: true,
+                error: false,
+                messages: [],
+                list: [],
+            },
+            selectedRole: {
+                data: {
+                    acl_role_id: '',
+                    name: '',
+                    is_owner: '',
+                    parent_acl_role_id: '',
+                    parent_name: '',
+                },
+                form: {
+                    loading: false,
+                    error: false,
+                    messages: [],
+                    fields: {
+                        name: {
+                            error: false,
+                            messages: [],
+                            value: '',
+                        },
+                        parent_acl_role_id: {
+                            error: false,
+                            messages: [],
+                            value: '',
+                        },
+                    },
+                },
+            },
+        },
+        methods: {
+
+            init: function () {
+                App.getRoles();
+            },
+
+            getRoles: function (finalCallback) {
+                function callback(response) {
+                    App.roles.error = response.error;
+                    App.roles.messages = response.messages;
+
+                    App.roles.list = [];
+                    if (response.content.roles) {
+                        for (var i in response.content.roles) {
+                            App.roles.list.push(response.content.roles[i]);
+                        }
+                    }
+
+                    App.roles.loaded = true;
+                    App.roles.loading = false;
+
+                    if (finalCallback) {
+                        finalCallback();
+                    } else {
+                        App.clearSelectRole();
+                    }
+                }
+
+                App.roles.loading = true;
+
+                var url = `/api/clients/${currentClient.client_id}/roles`;
+                axios.get(url, {
+                    headers: {
+                        'x-access-token': '<%- auth.token %>',
+                    },
+                })
+                    .then(function (response) {
+                        callback(response.data);
+                    })
+                    .catch(function (err) {
+                        callback(err.response.data);
+                    })
+                    ;
+            },
+
+            selectRole: function (role) {
+                App.selectedRole.data = role;
+                App.selectedRole.form = {
+                    loading: false,
+                    error: false,
+                    messages: [],
+                    fields: {
+                        name: {
+                            error: false,
+                            messages: [],
+                            value: role.name,
+                        },
+                        parent_acl_role_id: {
+                            error: false,
+                            messages: [],
+                            value: role.parent_acl_role_id,
+                        },
+                    },
+                };
+            },
+
+            clearSelectRole: function () {
+                App.selectedRole = {
+                    data: {
+                        acl_role_id: '',
+                        name: '',
+                        is_owner: '',
+                        parent_acl_role_id: '',
+                        parent_name: '',
+                    },
+                    form: {
+                        loading: false,
+                        error: false,
+                        messages: [],
+                        fields: {
+                            name: {
+                                error: false,
+                                messages: [],
+                                value: '',
+                            },
+                            parent_acl_role_id: {
+                                error: false,
+                                messages: [],
+                                value: '',
+                            },
+                        },
+                    },
+                };
+            },
+
+            addRole: function () {
+                function callback(response) {
+                    App.roles.error = response.error;
+                    App.roles.messages = response.messages;
+
+                    App.roles.loaded = true;
+                    App.roles.loading = false;
+
+                    if (!App.roles.error) {
+                        if (response.content.role) {
+                            App.getRoles(function () {
+                                App.selectRole(response.content.role);
+                            });
+                        }
+                    }
+                }
+
+                App.roles.loading = true;
+
+                var url = `/api/clients/${currentClient.client_id}/roles`;
+                axios.post(url, {
+                    name: 'Novo Perfil',
+                }, {
+                    headers: {
+                        'x-access-token': '<%- auth.token %>',
+                    },
+                })
+                    .then(function (response) {
+                        callback(response.data);
+                    })
+                    .catch(function (err) {
+                        callback(err.response.data);
+                    })
+                    ;
+            },
+
+            updateRole: function () {
+                function callback(response) {
+                    console.log('callback()', response);
+
+                    App.selectedRole.form.error = response.error;
+                    App.selectedRole.form.messages = response.messages;
+
+                    for (let fieldId in response.form) {
+                        App.selectedRole.form.fields[fieldId].error = response.form[fieldId].error;
+                        App.selectedRole.form.fields[fieldId].messages = response.form[fieldId].messages;
+                    }
+
+                    App.getRoles(function () {
+                        var role = App.roles.list.filter(function (role) {
+                            return role.acl_role_id == App.selectedRole.data.acl_role_id;
+                        })[0];
+                        App.selectRole(role);
+                        App.selectedRole.form.loading = false;
+                    });
+                }
+
+                App.selectedRole.form.loading = true;
+
+                var url = `/api/clients/${currentClient.client_id}/roles/${App.selectedRole.data.acl_role_id}`;
+                axios.put(url, {
+                    name: App.selectedRole.form.fields.name.value,
+                    parent_acl_role_id: App.selectedRole.form.fields.parent_acl_role_id.value,
+                }, {
+                    headers: {
+                        'x-access-token': '<%- auth.token %>',
+                    },
+                })
+                    .then(function (response) {
+                        callback(response.data);
+                    })
+                    .catch(function (err) {
+                        callback(err.response.data);
+                    })
+                    ;
+            },
+
+        },
+    });
+</script>

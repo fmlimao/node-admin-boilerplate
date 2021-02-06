@@ -36,7 +36,7 @@
 </head>
 
 <body class="hold-transition skin-blue sidebar-mini fixed">
-    <div class="wrapper">
+    <div class="wrapper" id="AppVue">
 
         <header class="main-header">
 
@@ -152,11 +152,26 @@
     <!-- ChartJS -->
     <script src="/bower_components/chart.js/Chart.js"></script>
     <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-    <script src="/bower_components/admin-lte/dist/js/pages/dashboard2.js"></script>
+    <!-- <script src="/bower_components/admin-lte/dist/js/pages/dashboard2.js"></script> -->
     <!-- AdminLTE for demo purposes -->
-    <script src="/bower_components/admin-lte/dist/js/demo.js"></script>
+    <!-- <script src="/bower_components/admin-lte/dist/js/demo.js"></script> -->
+    <!-- VueJS -->
+    <script src="/bower_components/vue/dist/vue.min.js"></script>
+    <!-- axios -->
+    <script src="/bower_components/axios/dist/axios.min.js"></script>
+
+    <script>var mixins = [];</script>
 
     <%- scripts %>
+
+    <script>
+        var App = new Vue({
+            el: '#AppVue',
+            mixins,
+        });
+
+        if (App.init) App.init();
+    </script>
 </body>
 
 </html>
