@@ -6,28 +6,28 @@ module.exports = async (req, res) => {
     let ret = req.ret;
 
     try {
-        ret.addFields(['name', 'parent_acl_role_id']);
+        ret.addFields(['name', 'parent_role_id']);
 
-        const { client_id, acl_role_id } = req.params;
-        const { name, parent_acl_role_id } = req.body;
+        const { client_id, role_id } = req.params;
+        const { name, parent_role_id } = req.body;
 
         const roleExists = await sql.getOne(`
             SELECT
-                R.acl_role_id
+                R.role_id
                 , R.name
                 , R.is_owner
                 , R.is_everyone
-                , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
+                , IFNULL(R2.role_id, '') AS parent_role_id
                 , IFNULL(R2.name, '') AS parent_name
-            FROM acl_roles R
-            LEFT JOIN acl_roles R2 ON (R.parent_acl_role_id = R2.acl_role_id AND R2.deleted_at IS NULL)
+            FROM roles R
+            LEFT JOIN roles R2 ON (R.parent_role_id = R2.role_id AND R2.deleted_at IS NULL)
             WHERE R.deleted_at IS NULL
             AND R.client_id = ?
-            AND R.acl_role_id = ?
+            AND R.role_id = ?
             ORDER BY R.is_owner DESC, R.name;
         `, [
             client_id,
-            acl_role_id,
+            role_id,
         ]);
 
         if (!roleExists) {
@@ -45,37 +45,37 @@ module.exports = async (req, res) => {
 
         if (!validator(ret, {
             name,
-            parent_acl_role_id,
+            parent_role_id,
         }, {
             name: 'string|min:3',
-            parent_acl_role_id: 'integer',
+            parent_role_id: 'integer',
         })) {
             throw new Error('Verifique todos os campos.');
         }
 
-        if (acl_role_id == parent_acl_role_id) {
+        if (role_id == parent_role_id) {
             ret.setCode(404);
-            ret.setFieldError('parent_acl_role_id', true);
-            ret.addFieldMessage('parent_acl_role_id', 'Perfil Pai não pode ser igual ao perfil editado.');
+            ret.setFieldError('parent_role_id', true);
+            ret.addFieldMessage('parent_role_id', 'Perfil Pai não pode ser igual ao perfil editado.');
             throw new Error('Verifique todos os campos.');
         }
 
-        if (parent_acl_role_id) {
+        if (parent_role_id) {
             const parentRoleExists = await sql.getOne(`
-                SELECT R.acl_role_id, R.is_owner, R.is_everyone
-                FROM acl_roles R
+                SELECT R.role_id, R.is_owner, R.is_everyone
+                FROM roles R
                 WHERE R.deleted_at IS NULL
                 AND R.client_id = ?
-                AND R.acl_role_id = ?;
+                AND R.role_id = ?;
             `, [
                 client_id,
-                parent_acl_role_id,
+                parent_role_id,
             ]);
 
             if (!parentRoleExists) {
                 ret.setCode(404);
-                ret.setFieldError('parent_acl_role_id', true);
-                ret.addFieldMessage('parent_acl_role_id', 'Perfil Pai não encontrado.');
+                ret.setFieldError('parent_role_id', true);
+                ret.addFieldMessage('parent_role_id', 'Perfil Pai não encontrado.');
                 throw new Error('Verifique todos os campos.');
             }
 
@@ -84,8 +84,8 @@ module.exports = async (req, res) => {
                 || parentRoleExists.is_everyone == 1
             ) {
                 ret.setCode(400);
-                ret.setFieldError('parent_acl_role_id', true);
-                ret.addFieldMessage('parent_acl_role_id', 'Perfil Pai não pode ser usado.');
+                ret.setFieldError('parent_role_id', true);
+                ret.addFieldMessage('parent_role_id', 'Perfil Pai não pode ser usado.');
                 throw new Error('Verifique todos os campos.');
             }
         }
@@ -99,9 +99,9 @@ module.exports = async (req, res) => {
         }
 
         if (roleExists.is_owner == 0) {
-            if (typeof parent_acl_role_id !== 'undefined') {
-                fieldsUpdate.push('parent_acl_role_id = ?');
-                argsUpdate.push(parent_acl_role_id ? parent_acl_role_id : null);
+            if (typeof parent_role_id !== 'undefined') {
+                fieldsUpdate.push('parent_role_id = ?');
+                argsUpdate.push(parent_role_id ? parent_role_id : null);
             }
         }
 
@@ -110,29 +110,29 @@ module.exports = async (req, res) => {
             throw new Error('Nenhum campo para editar.');
         }
 
-        argsUpdate.push(acl_role_id);
+        argsUpdate.push(role_id);
 
         await sql.update(`
-            UPDATE acl_roles
+            UPDATE roles
             SET ${fieldsUpdate.join(', ')}
-            WHERE acl_role_id = ?;
+            WHERE role_id = ?;
         `, argsUpdate);
 
         const role = await sql.getOne(`
             SELECT
-                R.acl_role_id
+                R.role_id
                 , R.name
                 , R.is_owner
                 , R.is_everyone
-                , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
+                , IFNULL(R2.role_id, '') AS parent_role_id
                 , IFNULL(R2.name, '') AS parent_name
-            FROM acl_roles R
-            LEFT JOIN acl_roles R2 ON (R.parent_acl_role_id = R2.acl_role_id AND R2.deleted_at IS NULL)
+            FROM roles R
+            LEFT JOIN roles R2 ON (R.parent_role_id = R2.role_id AND R2.deleted_at IS NULL)
             WHERE R.deleted_at IS NULL
-            AND R.acl_role_id = ?
+            AND R.role_id = ?
             ORDER BY R.is_owner DESC, R.name;
         `, [
-            acl_role_id,
+            role_id,
         ]);
 
         ret.addContent('role', role);

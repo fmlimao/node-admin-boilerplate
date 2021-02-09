@@ -19,8 +19,8 @@ module.exports = async (req, res) => {
             throw new Error('Verifique todos os campos.');
         }
 
-        const acl_role_id = await sql.insert(`
-            INSERT INTO acl_roles (name, client_id, is_owner)
+        const role_id = await sql.insert(`
+            INSERT INTO roles (name, client_id, is_owner)
             VALUES (?, ?, 0);
         `, [
             name,
@@ -29,18 +29,18 @@ module.exports = async (req, res) => {
 
         const role = await sql.getOne(`
             SELECT
-                R.acl_role_id
+                R.role_id
                 , R.name
                 , R.is_owner
                 , R.is_everyone
-                , IFNULL(R2.acl_role_id, '') AS parent_acl_role_id
+                , IFNULL(R2.role_id, '') AS parent_role_id
                 , IFNULL(R2.name, '') AS parent_name
-            FROM acl_roles R
-            LEFT JOIN acl_roles R2 ON (R.parent_acl_role_id = R2.acl_role_id AND R2.deleted_at IS NULL)
+            FROM roles R
+            LEFT JOIN roles R2 ON (R.parent_role_id = R2.role_id AND R2.deleted_at IS NULL)
             WHERE R.deleted_at IS NULL
-            AND R.acl_role_id = ?;
+            AND R.role_id = ?;
         `, [
-            acl_role_id,
+            role_id,
         ]);
 
         ret.addContent('role', role);
