@@ -2,10 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const authMiddleware = require('../../middlewares/api/auth');
-// const getTenantMiddleware = require('../../middlewares/api/get-tenant-middleware');
-// const getTenantUserMiddleware = require('../../middlewares/api/get-tenant-user-middleware');
-// const getTenantOrderMiddleware = require('../../middlewares/api/get-tenant-order-middleware');
-// const getTenantCategoryMiddleware = require('../../middlewares/api/get-tenant-category-middleware');
+const getClientMiddleware = require('../../middlewares/api/get-client-middleware');
+const getClientRoleMiddleware = require('../../middlewares/api/get-client-role-middleware');
 
 // router.get('/', require('./home'));
 
@@ -13,24 +11,12 @@ router.post('/auth', require('./auth/auth'));
 
 router.get('/me', authMiddleware, require('./me'));
 
-router.get('/clients/:client_id/roles', authMiddleware, require('./roles/list'));
-router.post('/clients/:client_id/roles', authMiddleware, require('./roles/store'));
-router.put('/clients/:client_id/roles/:role_id', authMiddleware, require('./roles/update'));
-router.delete('/clients/:client_id/roles/:role_id', authMiddleware, require('./roles/delete'));
-
-router.get('/privileges/:is_owner', authMiddleware, require('./privileges/list'));
-
-// router.get('/tenants', authMiddleware, require('./tenants/list'));
-// router.get('/tenants/:tenant_id', getTenantMiddleware, require('./tenants/show'));
-
-// router.get('/tenants/:tenant_id/users', getTenantMiddleware, require('./tenants/users/list'));
-// router.get('/tenants/:tenant_id/users/:user_id', getTenantMiddleware, getTenantUserMiddleware, require('./tenants/users/show'));
-
-// router.get('/tenants/:tenant_id/orders', getTenantMiddleware, require('./tenants/orders/list'));
-// router.get('/tenants/:tenant_id/orders/:order_id', getTenantMiddleware, getTenantOrderMiddleware, require('./tenants/orders/show'));
-
-// router.get('/tenants/:tenant_id/categories', getTenantMiddleware, require('./tenants/categories/list'));
-// router.get('/tenants/:tenant_id/categories/:category_id', getTenantMiddleware, getTenantCategoryMiddleware, require('./tenants/categories/show'));
+router.get('/clients/:client_id/roles', authMiddleware, getClientMiddleware, require('./clients/roles/list'));
+router.post('/clients/:client_id/roles', authMiddleware, getClientMiddleware, require('./clients/roles/store'));
+router.get('/clients/:client_id/roles/:role_id', authMiddleware, getClientMiddleware, getClientRoleMiddleware, require('./clients/roles/show'));
+router.put('/clients/:client_id/roles/:role_id', authMiddleware, getClientMiddleware, getClientRoleMiddleware, require('./clients/roles/update'));
+router.delete('/clients/:client_id/roles/:role_id', authMiddleware, getClientMiddleware, getClientRoleMiddleware, require('./clients/roles/delete'));
+router.get('/clients/:client_id/privileges', authMiddleware, getClientMiddleware, require('./clients/privileges/list'));
 
 router.use(require('../../middlewares/api/error-404'));
 router.use(require('../../middlewares/api/error-500'));

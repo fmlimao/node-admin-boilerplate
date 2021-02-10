@@ -74,8 +74,6 @@
             </div>
             <!-- /. box -->
 
-            <pre>{{ selectedRole }}</pre>
-
         </div>
         <!-- /.col -->
 
@@ -103,50 +101,82 @@
                             ">
                         <small class="help-block" v-html="selectedRole.form.fields.name.messages.join('<br>')"></small>
                     </div>
-
-                    <div class="form-groupr" :class="{
-                        'has-error': selectedRole.form.fields.parent_role_id.error
-                    }">
-                        <label for="iptRoleParentAclRoleId">
-                            Perfil Pai
-                            <span class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="right"
-                                title="Este novo perfil irá herdar todas as permissões do Perfil Pai."></span>
-                        </label>
-                        <select id="iptRoleParentAclRoleId" class="form-control"
-                            v-model="selectedRole.form.fields.parent_role_id.value" :disabled="
-                            !selectedRole.data.role_id
-                            || selectedRole.data.is_owner == 1
-                            || selectedRole.data.is_everyone == 1
-                            || selectedRole.form.loading
-                        ">
-                            <option value="">-- Nenhum --</option>
-                            <option v-for="role in roles.list" :value="role.role_id"
-                                :disabled="role.is_owner == 1 || role.is_everyone == 1">{{ role.name }}</option>
-                        </select>
-                        <small class="help-block"
-                            v-html="selectedRole.form.fields.parent_role_id.messages.join('<br>')"></small>
-                    </div>
                 </div>
                 <!-- /.box-body -->
             </div>
             <!-- /. box -->
 
+            <div class="alert alert-info" v-if="!resources.loaded">Carregando...</div>
+
+            <div v-else>
+
+                <div class="box box-default" v-for="resource in resources.list">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">{{ resource.name }}</h3>
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body no-padding">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+                                <tr v-for="privilege in resource.privileges">
+                                    <td>
+                                        <h4>{{ privilege.name }}</h4>
+
+                                        <p class="text-muted" v-if="privilege.description">
+                                            {{ privilege.description }}
+                                        </p>
+                                    </td>
+                                    <td width="150" align="right">
+                                        <div style="margin-top: 20px;">
+
+                                            <div class="pretty-switch ps-2">
+                                                <input type="radio" :name="privilege.key" value="0" v-model="privilege.value" :disabled="!selectedRole.data.role_id || selectedRole.form.loading">
+                                                <input type="radio" :name="privilege.key" value="1" v-model="privilege.value" :disabled="!selectedRole.data.role_id || selectedRole.form.loading">
+
+                                                <div class="states">
+                                                    <div class="state">
+                                                        <span class="glyphicon glyphicon-remove"></span>
+                                                    </div>
+
+                                                    <div class="state">
+                                                        <span class="glyphicon glyphicon-ok"></span>
+                                                    </div>
+                                                </div>
+                                                <!-- /.states -->
+
+                                            </div>
+                                            <!-- /.pretty-switch -->
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+                <!-- /. box -->
+
+            </div>
+
             <div class="box box-default">
                 <div class="box-body">
-                    <button class="btn btn-success"
-                        :disabled="!selectedRole.data.role_id || selectedRole.form.loading"
+                    <button class="btn btn-success" :disabled="!selectedRole.data.role_id || selectedRole.form.loading"
                         @click.prevent="updateRole()">
                         Salvar
                     </button>
 
-                    <button class="btn btn-danger"
-                        :disabled="!selectedRole.data.role_id || selectedRole.form.loading"
+                    <button class="btn btn-danger" :disabled="!selectedRole.data.role_id || selectedRole.form.loading"
                         @click.prevent="openDeleteRole()">
                         Deletar
                     </button>
 
-                    <button class="btn btn-default"
-                        :disabled="!selectedRole.data.role_id || selectedRole.form.loading">
+                    <button class="btn btn-default" :disabled="!selectedRole.data.role_id || selectedRole.form.loading">
                         Cancelar
                     </button>
                 </div>
@@ -192,6 +222,11 @@
 
     mixins.push({
         data: {
+            resources: {
+                loaded: false,
+                loading: true,
+                list: [],
+            },
             roles: {
                 loaded: false,
                 loading: true,
@@ -203,18 +238,12 @@
                     name: '',
                     is_owner: '',
                     is_everyone: '',
-                    parent_role_id: '',
                     parent_name: '',
                 },
                 form: {
                     loading: false,
                     fields: {
                         name: {
-                            error: false,
-                            messages: [],
-                            value: '',
-                        },
-                        parent_role_id: {
                             error: false,
                             messages: [],
                             value: '',
@@ -226,7 +255,10 @@
         methods: {
 
             init: function () {
-                App.getRoles();
+                App.getResourcesPrivileges(function () {
+                    App.clearPrivilegesValues();
+                    App.getRoles();
+                });
             },
 
             alert: function (type, message, title) {
@@ -244,6 +276,81 @@
                 if (type) notifySettings.type = type;
 
                 $.notify(notifyOptions, notifySettings);
+            },
+
+            getResourcesPrivileges: function (finalCallback) {
+                function callback(response) {
+                    if (response.messages.length) {
+                        var message = response.error ? `Erro ao buscar privilégios<br>(${response.messages.join('<br>')})` : response.messages.join('<br>');
+                        App.alert(response.error ? 'danger' : 'success', message);
+                    }
+
+                    App.resources.list = [];
+                    if (response.content.privileges) {
+                        App.resources.list = response.content.privileges.reduce((a, c) => {
+                            const resource_id = c.resource_id;
+                            const resource_name = c.resource_name;
+                            const resource_is_owner = c.resource_is_owner;
+                            const resource_order = c.resource_order;
+                            const privilege_id = c.privilege_id;
+                            const privilege_name = c.privilege_name;
+                            const privilege_description = c.privilege_description;
+                            const privilege_key = c.privilege_key;
+                            const privilege_order = c.privilege_order;
+
+                            if (typeof a[resource_id] === 'undefined') {
+                                a[resource_id] = {
+                                    resource_id: resource_id,
+                                    name: resource_name,
+                                    is_owner: resource_is_owner,
+                                    order: resource_order,
+                                    privileges: {},
+                                };
+                            }
+
+                            if (typeof a[resource_id].privileges[privilege_id] === 'undefined') {
+                                a[resource_id].privileges[privilege_id] = {
+                                    privilege_id: privilege_id,
+                                    name: privilege_name,
+                                    description: privilege_description,
+                                    key: privilege_key,
+                                    order: privilege_order,
+                                    value: '',
+                                };
+                            }
+
+                            return a;
+                        }, {});
+                    }
+
+                    App.resources.loaded = true;
+                    App.resources.loading = false;
+
+                    if (finalCallback) {
+                        finalCallback();
+                    }
+                }
+
+                App.resources.loading = true;
+
+                var url = `/api/clients/${currentClient.client_id}/privileges`;
+                axios.get(url, {
+                    headers: ajaxHeaders,
+                })
+                    .then(function (response) {
+                        callback(response.data);
+                    })
+                    .catch(function (err) {
+                        callback(err.response.data);
+                    });
+            },
+
+            clearPrivilegesValues: function () {
+                for (var resource_id in App.resources.list) {
+                    for (var privilege_id in App.resources.list[resource_id].privileges) {
+                        App.resources.list[resource_id].privileges[privilege_id].value = '';
+                    }
+                }
             },
 
             getRoles: function (finalCallback) {
@@ -291,7 +398,6 @@
                         name: '',
                         is_owner: '',
                         is_everyone: '',
-                        parent_role_id: '',
                         parent_name: '',
                     },
                     form: {
@@ -302,18 +408,16 @@
                                 messages: [],
                                 value: '',
                             },
-                            parent_role_id: {
-                                error: false,
-                                messages: [],
-                                value: '',
-                            },
                         },
                     },
                 };
+
+                App.clearPrivilegesValues();
             },
 
             selectRole: function (role_id) {
                 App.clearSelectRole();
+                App.clearPrivilegesValues();
 
                 var roleExists = null;
 
@@ -333,11 +437,6 @@
                                     error: false,
                                     messages: [],
                                     value: roleExists.name,
-                                },
-                                parent_role_id: {
-                                    error: false,
-                                    messages: [],
-                                    value: roleExists.parent_role_id,
                                 },
                             },
                         },
@@ -465,7 +564,6 @@
                 var url = `/api/clients/${currentClient.client_id}/roles/${role_id}`;
                 axios.put(url, {
                     name: App.selectedRole.form.fields.name.value,
-                    parent_role_id: App.selectedRole.form.fields.parent_role_id.value,
                 }, {
                     headers: ajaxHeaders,
                 })
